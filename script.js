@@ -10,7 +10,7 @@ import { create } from 'zustand';
 // global variables
 let scene, camera, renderer, controls; // initialization, declaration
 let sky, sun;
-let duck;
+let duck, particleSystem1, particleSystem2;
 let treeTrunkBoundingBox, treeLeafBoundingSpheres = [];
 
 
@@ -40,40 +40,6 @@ function load() {
     scene.add(duck);
   });
 
-  const loaderBoard = new THREE.TextureLoader();
-
-  // Carregar texturas
-  const baseColorTexture = loaderBoard.load('data/maps/Board_Material_BaseColor.png');
-  const heightTexture = loaderBoard.load('data/maps/Board_Material_Height.png');
-  const metallicTexture = loaderBoard.load('data/maps/Board_Material_Metallic.png');
-  const normalTexture = loaderBoard.load('data/maps/Board_Material_Normal.png');
-  const roughnessTexture = loaderBoard.load('data/maps/Board_Material_Roughness.png');
-
-  const material = new THREE.MeshStandardMaterial({
-    map: baseColorTexture,  // Cor base
-    displacementMap: heightTexture,  // Mapa de deslocamento (height)
-    metalnessMap: metallicTexture,  // Mapa de metalicidade
-    normalMap: normalTexture,  // Mapa normal
-    roughnessMap: roughnessTexture  // Mapa de aspereza
-  });
-
-  // Ajustar escalas de deslocamento, se necessário
-  material.displacementScale = 0.1;  // Ajuste conforme a necessidade para seu modelo
-
-  // Aplicar o material ao modelo
-  gltfLoader.load('data/ImageToStl.com_board.glb', function (gltf) {
-    gltf.scene.traverse(function (node) {
-      if (node.isMesh) {
-        node.material = material;
-      }
-    });
-    gltf.scene.position.set(0, 50, 0);
-    gltf.scene.scale.set(10, 10, 10); // Aumentar a escala para garantir visibilidade
-    scene.add(gltf.scene);
-    renderer.render(scene, camera);
-  }, undefined, function (error) {
-    console.error('Error loading GLTF:', error);
-  });
 
 
   const loader = new THREE.ObjectLoader(manager);
@@ -106,10 +72,11 @@ function init() {
     1,
     1000
   );
-  camera.position.z = 40;
+  camera.position.z = 300;
   camera.position.y = 10;
-  camera.position.x = 30;
+  camera.position.x = -10;
   // camera.zoom = 3;
+  camera.lookAt(-100, 10, 300);
 
 
   renderer = new THREE.WebGLRenderer();
@@ -229,10 +196,323 @@ function scenery() {
 
   createForestEdge();
 
-  createStonePathZ(400, -75, 30, 200);
-  createStonePathX(373, -173, 7, 50);
+  createStonePathZ(300, -75, 30, 200);
+  createStonePathX(273, -173, 7, 50);
+
+  Board();
+
+  BoardTrees();
+
+  function BoardTrees() {
+
+    particleSystem1 = arvoreRosa(-30, 0, 210);
+    particleSystem2 = arvoreRosa(-60, 0, 260);
+
+    // outra rosa
+    function arvoreRosa(x, y, z) {
+      const treeHeight = 60;
+      const trunkHeight = treeHeight * 0.5;
+      const trunkRadius = 3;
+      const trunkGeo = new THREE.CylinderGeometry(trunkRadius, trunkRadius, trunkHeight, 12);
+      const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x8B4513,
+        map: noiseTexture,
+      });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.set(x, y + trunkHeight / 2, z);
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      scene.add(trunk);
+    
+       // Create cherry blossoms using SphereGeometry with small particles
+       const blossomCount = 80 + treeHeight / 4; // Total number of blossoms
+       const blossomGeo = new THREE.SphereGeometry(10, 8, 8); // Small spheres for blossoms
+       const blossomMat = new THREE.MeshStandardMaterial({
+         color: 0xFFB7C5, // A soft pink color for the blossoms
+         map: noiseTexture,
+ 
+       });
+ 
+       for (let i = 0; i < blossomCount; i++) {
+         const blossom = new THREE.Mesh(blossomGeo, blossomMat);
+         const angle = Math.random() * Math.PI * 2; // Random angle for horizontal spread
+         const height = y + trunkHeight + (Math.random() * treeHeight * 0.2); // Random height above the trunk
+         const distance = 10; // Random distance from trunk center
+         blossom.position.set(
+           x + Math.cos(angle) * distance,
+           height,
+           z + Math.sin(angle) * distance
+         );
+         blossom.castShadow = true;
+         blossom.receiveShadow = true;
+         scene.add(blossom);
+       }
+ 
+    
+      // Particle system for cherry blossoms
+      const particleCount = 1000;
+      const particles = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount * 3; i++) {
+        positions[i] = Math.random() * 200 - 100; // Adjust for more centralized spawning
+      }
+      particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    
+      const particleMaterial = new THREE.PointsMaterial({
+        color: 0xFFB7C5,
+        size: 0.5,
+        transparent: true,
+        opacity: 0.6  // Increased opacity for visibility
+      });
+    
+      const particleSystem = new THREE.Points(particles, particleMaterial);
+      particleSystem.position.set(x, y, z); // Adjust position to emit from the top of the trunk
+      scene.add(particleSystem);
+    
+      return particleSystem; // Return the particle system
+    }
 
 
+    // Willow tree arvore com sombras
+    const willowTreeHeight = 70;
+    const willowTrunkGeo = new THREE.CylinderGeometry(2, 5, willowTreeHeight, 12);
+    const willowTrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willowTrunk = new THREE.Mesh(willowTrunkGeo, willowTrunkMat);
+    willowTrunk.castShadow = true;  // Habilitar a projeção de sombras
+    willowTrunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willowTrunk.position.set(-70, 0 + willowTreeHeight / 2, 340);
+    willowTrunk.castShadow = true;
+    willowTrunk.receiveShadow = true;
+    scene.add(willowTrunk);
+    treeTrunkBoundingBox = new THREE.Box3().setFromObject(willowTrunk);
+
+
+    // Create willow foliage using an IcosahedronGeometry for a more organic look
+    const willowLeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willowLeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willowLeaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf = new THREE.Mesh(willowLeafGeo, willowLeafMat);
+      leaf.position.set(
+        -70 + Math.random() * 10 - 5, // Random position around the trunk
+        0 + willowTreeHeight - i * 5, // Gradually lower the leaves
+        340 + Math.random() * 10 - 5
+      );
+      leaf.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf.rotation.z = Math.random() * Math.PI;
+      leaf.castShadow = true;
+      leaf.receiveShadow = true;
+      scene.add(leaf);
+      willowLeaves.push(leaf);
+    }
+
+
+
+
+    // Willow tree arvore com sombras
+    const willow2TreeHeight = 50;
+    const willow2TrunkGeo = new THREE.CylinderGeometry(2, 5, willow2TreeHeight, 12);
+    const willow2TrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willow2Trunk = new THREE.Mesh(willow2TrunkGeo, willow2TrunkMat);
+    willow2Trunk.castShadow = true;  // Habilitar a projeção de sombras
+    willow2Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willow2Trunk.position.set(-120, 0 + willow2TreeHeight / 2, 328);
+    willow2Trunk.castShadow = true;
+    willow2Trunk.receiveShadow = true;
+    scene.add(willow2Trunk);
+    treeTrunkBoundingBox = new THREE.Box3().setFromObject(willow2Trunk);
+
+
+    // Create willow2 foliage using an IcosahedronGeometry for a more organic look
+    const willow2LeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willow2LeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willow2Leaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf2 = new THREE.Mesh(willow2LeafGeo, willow2LeafMat);
+      leaf2.position.set(
+        -120 + Math.random() * 10 - 5, // Random position around the trunk
+        0 + willow2TreeHeight - i * 5, // Gradually lower the leaves
+        328 + Math.random() * 10 - 5
+      );
+      leaf2.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf2.rotation.z = Math.random() * Math.PI;
+      leaf2.castShadow = true;
+      leaf2.receiveShadow = true;
+      scene.add(leaf2);
+      willow2Leaves.push(leaf2);
+    }
+
+  }
+
+  function Board() {
+    /// Parâmetros da moldura
+    const frameOuterWidth = 25;
+    const frameOuterHeight = 15;
+    const frameThickness = 1;
+    const extrudeDepth = 1;
+
+    const frameGroup = new THREE.Group();
+
+
+    // Material da moldura
+    const wood = new THREE.TextureLoader().load('data/madeira.jpeg')
+    const cortica = new THREE.TextureLoader().load('data/cortica.png')
+    const frameMaterial = new THREE.MeshBasicMaterial({ map: wood });
+
+    // Parte superior da moldura
+    const topFrameGeometry = new THREE.BoxGeometry(frameOuterWidth, frameThickness, extrudeDepth);
+    const topFrame = new THREE.Mesh(topFrameGeometry, frameMaterial);
+    topFrame.position.y = 12 + frameOuterHeight / 2 - frameThickness / 2;
+    topFrame.position.z = 280 - extrudeDepth / 2;
+    topFrame.position.x = -10
+
+    frameGroup.add(topFrame);
+
+    // Parte inferior da moldura
+    const bottomFrameGeometry = new THREE.BoxGeometry(frameOuterWidth, frameThickness, extrudeDepth);
+    const bottomFrame = new THREE.Mesh(bottomFrameGeometry, frameMaterial);
+    bottomFrame.position.y = 12 - frameOuterHeight / 2 + frameThickness / 2;
+    bottomFrame.position.z = 280 - extrudeDepth / 2;
+    bottomFrame.position.x = -10
+
+    frameGroup.add(bottomFrame);
+
+    // Lados da moldura
+    const sideFrameGeometry = new THREE.BoxGeometry(frameThickness, frameOuterHeight - 2 * frameThickness, extrudeDepth);
+    // Lado esquerdo
+    const leftFrame = new THREE.Mesh(sideFrameGeometry, frameMaterial);
+    leftFrame.position.x = -10 - frameOuterWidth / 2 + frameThickness / 2;
+    leftFrame.position.z = 280 - extrudeDepth / 2;
+    leftFrame.position.y = 12
+
+    frameGroup.add(leftFrame);
+    // Lado direito
+    const rightFrame = new THREE.Mesh(sideFrameGeometry, frameMaterial);
+    rightFrame.position.x = -10 + frameOuterWidth / 2 - frameThickness / 2;
+    rightFrame.position.z = 280 - extrudeDepth / 2;
+    rightFrame.position.y = 12
+    frameGroup.add(rightFrame);
+
+    // Adicionando o quadro central
+    const boardGeometry = new THREE.BoxGeometry(frameOuterWidth - 2 * frameThickness, frameOuterHeight - 2 * frameThickness, 0.1);
+    const boardMaterial = new THREE.MeshBasicMaterial({ color: 0xc3946b, map: cortica });
+    const board = new THREE.Mesh(boardGeometry, boardMaterial);
+    board.position.z = 280 - extrudeDepth + 0.1; // Posicionando um pouco à frente para não ficar exatamente no fundo
+    board.position.y = 12
+    board.position.x = -10
+    frameGroup.add(board);
+
+    // Adicionando o quadro central
+    const backGeometry = new THREE.BoxGeometry(frameOuterWidth - 2 * frameThickness, frameOuterHeight - 2 * frameThickness, 0.1);
+    const backMaterial = new THREE.MeshBasicMaterial({ map: wood });
+    const back = new THREE.Mesh(backGeometry, backMaterial);
+    back.position.z = 280 - extrudeDepth + 0.05; // Posicionando um pouco à frente para não ficar exatamente no fundo
+    back.position.y = 12
+    back.position.x = -10
+    frameGroup.add(back);
+
+
+
+    // Base cilíndrica
+    // Base cilíndrica
+    const BaseGeometry = new THREE.BoxGeometry(frameThickness + 1, frameOuterHeight - 2 * frameThickness - 5, extrudeDepth);
+    const leftBase = new THREE.Mesh(BaseGeometry, frameMaterial);
+    leftBase.position.x = -8 - frameOuterWidth / 2 + frameThickness / 2;
+    leftBase.position.z = 280 - extrudeDepth / 2;
+    leftBase.position.y = 0.5
+
+    frameGroup.add(leftBase);
+
+    // Lado direito
+    const rightBase = new THREE.Mesh(BaseGeometry, frameMaterial);
+    rightBase.position.x = -12 + frameOuterWidth / 2 - frameThickness / 2;
+    rightBase.position.z = 280 - extrudeDepth / 2;
+    rightBase.position.y = 0.5
+
+    frameGroup.add(rightBase);
+
+    topFrame.castShadow = true; // Permitir que este objeto lance sombras
+    topFrame.receiveShadow = true; // Permitir que este objeto receba sombras
+
+    // Faça o mesmo para outros objetos
+    bottomFrame.castShadow = true;
+    bottomFrame.receiveShadow = true;
+    leftFrame.castShadow = true;
+    leftFrame.receiveShadow = true;
+    rightFrame.castShadow = true;
+    rightFrame.receiveShadow = true;
+    board.receiveShadow = true; // Geralmente quadros como este não lançam sombras, mas recebem
+    board.castShadow = true;
+    rightBase.castShadow = true;
+    rightBase.receiveShadow = true;
+    leftBase.castShadow = true;
+    leftBase.receiveShadow = true;
+
+
+
+    scene.add(frameGroup)
+
+    frameGroup.rotation.y = 0.6
+    frameGroup.position.x = -180
+    frameGroup.position.z = 40
+
+
+
+    // circulo
+
+    pin(-34, 10, 279)
+
+    pin(-38, 10, 281.5)
+
+    pin(-37.5, 16.3, 281)
+
+    pin(-30.5, 14.3, 276)
+
+    pin(-27.7, 10.2, 274.5)
+
+    pin(-23, 12, 271)
+
+    pin(-25.5, 17.2, 272.7)
+
+    pin(-35.5, 17.2, 279.5)
+
+
+
+
+
+  }
+
+  function pin(x, y, z) {
+    const pinGeo = new THREE.SphereGeometry(0.2, 8, 8); // Small spheres for blossoms
+    const pinMat = new THREE.MeshStandardMaterial({
+      color: 0x8050cc, // A soft pink color for the blossoms
+    });
+    const pin = new THREE.Mesh(pinGeo, pinMat);
+    pin.position.z = z
+    pin.position.y = y
+    pin.position.x = x
+
+    scene.add(pin)
+
+  }
 
 
   function createStonePathZ(z, x, numStones, pathLength) {
@@ -642,6 +922,8 @@ function scenery() {
 
 function animate() {
   requestAnimationFrame(animate);
+  updateParticles(particleSystem1);
+  updateParticles(particleSystem2);
 
   // Calculate the forward direction vector of the camera
   const direction = new THREE.Vector3(0, 0, -1);
@@ -710,3 +992,15 @@ function calculateNormalForBoundingBox(box, point) {
   const closestPoint = new THREE.Vector3().copy(point).clamp(box.min, box.max);
   return new THREE.Vector3().subVectors(point, closestPoint).normalize();
 }
+
+  // Animation function to update particles
+  function updateParticles(particleSystem) {
+    const positions = particleSystem.geometry.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i + 1] -= 0.1; // Move each particle down
+      if (positions[i + 1] < 0) {
+        positions[i + 1] += 50; // Reset particles to top when they reach bottom
+      }
+    }
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+  }
