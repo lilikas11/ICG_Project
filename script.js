@@ -3,12 +3,15 @@
   https://threejs.org/docs/index.html#manual/en/introduction/Creating-a-scene
 */
 
+import { color } from 'three/examples/jsm/nodes/Nodes.js';
 import { FirstPersonControls } from './js/FirstPersonControls.js';
 
 // global variables
 let scene, camera, renderer, controls; // initialization, declaration
 let sky, sun;
 let duck;
+let treeTrunkBoundingBox, treeLeafBoundingSpheres = [];
+
 
 const ambientColor = 0x394040;
 
@@ -174,17 +177,65 @@ function scenery() {
   ground.receiveShadow = true;
   scene.add(ground);
 
+
+
   const noiseTexture = new THREE.TextureLoader().load(noiseTextureURL);
   noiseTexture.wrapS = THREE.RepeatWrapping;
   noiseTexture.wrapT = THREE.RepeatWrapping;
   noiseTexture.repeat.set(1, 4);
+
+// Carregar a textura
+const textureLoader = new THREE.TextureLoader();
+
+// Configurações da pedra
+const stoneRadiusTop = 1.8; // Raio superior do cilindro
+const stoneRadiusBottom = 2; // Raio inferior do cilindro para dar um efeito ligeiramente cônico
+const stoneHeight = 0.3; // Altura da pedra
+const stoneSegments = 32; // Número de segmentos para suavizar a pedra
+
+// Criar as pedras
+const stoneGeometry = new THREE.CylinderGeometry(stoneRadiusTop, stoneRadiusBottom, stoneHeight, stoneSegments);
+const stoneMaterial = new THREE.MeshStandardMaterial({
+  color: 0x6666666, // Cor cinza
+  map: noiseTexture
+});
+
+const numStones = 15; // Número de pedras no caminho
+const pathLength = 100; // Comprimento total do caminho
+const z = 0; // Posição z do caminho
+
+for (let i = 0; i < numStones; i++) {
+  const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
+  stone.position.x = (i / numStones) * pathLength - pathLength / 2 +  Math.random() * 1; // Distribuir ao longo do caminho
+  stone.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
+  stone.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
+  stone.position.z = z - Math.random() * 2  ;
+  
+  scene.add(stone);
+  
+  const stone2 = new THREE.Mesh(stoneGeometry, stoneMaterial);
+
+  stone2.position.x = (i / numStones) * pathLength - pathLength / 2 + Math.random() * 1; // Distribuir ao longo do caminho
+  stone2.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
+  stone2.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
+  stone2.position.z = z + 5 + Math.random() * 2;
+
+  scene.add(stone2);
+
+}
+
+// Renderizar a cena
+renderer.render(scene, camera);
+
 
 
 
   cloudLayer(250, 100);
   cloudLayer(150, 200);
 
+  centralTree();
 
+  function centralTree(){
   // Willow tree arvore com sombras
   const willowTreeHeight = 70;
   const willowTrunkGeo = new THREE.CylinderGeometry(2, 5, willowTreeHeight, 12);
@@ -197,6 +248,8 @@ function scenery() {
   willowTrunk.receiveShadow = true;  // Permitir que o objeto receba sombras
   willowTrunk.position.set(0, 0 + willowTreeHeight / 2, 0);
   scene.add(willowTrunk);
+  treeTrunkBoundingBox = new THREE.Box3().setFromObject(willowTrunk);
+
 
   // Create willow foliage using an IcosahedronGeometry for a more organic look
   const willowLeafGeo = new THREE.IcosahedronGeometry(15, 1);
@@ -222,7 +275,13 @@ function scenery() {
     scene.add(leaf);
     willowLeaves.push(leaf);
   }
-
+  willowLeaves.forEach(leaf => {
+    let sphere = new THREE.Sphere();
+    let box = new THREE.Box3().setFromObject(leaf);
+    box.getBoundingSphere(sphere);
+    treeLeafBoundingSpheres.push(sphere);
+  });
+  }
 
   createForestEdge();
 
@@ -503,15 +562,74 @@ function scenery() {
 
 }
 
+
 function animate() {
   requestAnimationFrame(animate);
-  controls.update(0.1);
+
+  // Calculate the forward direction vector of the camera
+  const direction = new THREE.Vector3(0, 0, -1);
+  direction.applyQuaternion(camera.quaternion);
+
+  const moveDistance = controls.movementSpeed * 0.1;
+  const potentialPosition = camera.position.clone().add(direction.multiplyScalar(moveDistance));
+
+  const collisionResult = checkCollision(potentialPosition);
+  if (!collisionResult.collided) {
+      controls.update(0.1);  // Update normally if no collision
+  } else {
+      // Adjust the camera position to slide along the collision surface
+      slideAlongCollisionSurface(direction, moveDistance, collisionResult.normal);
+  }
+
   duck.rotation.y += 0.01;
   renderer.render(scene, camera);
 }
+
+function slideAlongCollisionSurface(direction, moveDistance, collisionNormal) {
+  // Calcula a componente do vetor de movimento que está na direção da normal
+  const movementComponentAlongNormal = direction.clone().projectOnVector(collisionNormal);
+
+  // Calcula a direção de deslizamento subtraindo a componente ao longo da normal da direção original
+  let slideDirection = direction.clone().sub(movementComponentAlongNormal);
+
+  // Verifica se o deslizamento ainda aponta na direção original do movimento
+  if (slideDirection.dot(direction) > 0) {
+      // Se sim, inverte a direção para garantir que não estamos indo em direção ao obstáculo
+      slideDirection.negate();
+  }
+
+  // Normaliza a direção de deslizamento para manter a velocidade constante e multiplica pela distância de movimento
+  const safePosition = camera.position.clone().add(slideDirection.normalize().multiplyScalar(moveDistance));
+
+  // Atualiza a posição da câmera para a nova posição segura
+  camera.position.copy(safePosition);
+}
+
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+
+
+function checkCollision(newPosition) {
+  if (treeTrunkBoundingBox.containsPoint(newPosition)) {
+      return { collided: true, normal: calculateNormalForBoundingBox(treeTrunkBoundingBox, newPosition) };
+  }
+  for (let sphere of treeLeafBoundingSpheres) {
+      if (newPosition.distanceTo(sphere.center) < sphere.radius) {
+          const normal = new THREE.Vector3().subVectors(newPosition, sphere.center).normalize();
+          return { collided: true, normal: normal };
+      }
+  }
+  return { collided: false };
+}
+
+function calculateNormalForBoundingBox(box, point) {
+  // A simple approximation for a bounding box normal could be based on the nearest face
+  // This is a placeholder function. Proper calculation would depend on the specific geometry.
+  const closestPoint = new THREE.Vector3().copy(point).clamp(box.min, box.max);
+  return new THREE.Vector3().subVectors(point, closestPoint).normalize();
 }

@@ -138,7 +138,7 @@ class FirstPersonControls {
             mouseMoveTimeout = setTimeout(() => {
                 this.pointerX = 0;
                 this.pointerY = 0;
-            }, 1000);  // Reset após 3 segundos de inatividade
+            }, 500);  // Reset após 3 segundos de inatividade
 
 
 		};
