@@ -5,6 +5,7 @@
 
 import { color } from 'three/examples/jsm/nodes/Nodes.js';
 import { FirstPersonControls } from './js/FirstPersonControls.js';
+import { create } from 'zustand';
 
 // global variables
 let scene, camera, renderer, controls; // initialization, declaration
@@ -39,13 +40,49 @@ function load() {
     scene.add(duck);
   });
 
+  const loaderBoard = new THREE.TextureLoader();
+
+  // Carregar texturas
+  const baseColorTexture = loaderBoard.load('data/maps/Board_Material_BaseColor.png');
+  const heightTexture = loaderBoard.load('data/maps/Board_Material_Height.png');
+  const metallicTexture = loaderBoard.load('data/maps/Board_Material_Metallic.png');
+  const normalTexture = loaderBoard.load('data/maps/Board_Material_Normal.png');
+  const roughnessTexture = loaderBoard.load('data/maps/Board_Material_Roughness.png');
+
+  const material = new THREE.MeshStandardMaterial({
+    map: baseColorTexture,  // Cor base
+    displacementMap: heightTexture,  // Mapa de deslocamento (height)
+    metalnessMap: metallicTexture,  // Mapa de metalicidade
+    normalMap: normalTexture,  // Mapa normal
+    roughnessMap: roughnessTexture  // Mapa de aspereza
+  });
+
+  // Ajustar escalas de deslocamento, se necessário
+  material.displacementScale = 0.1;  // Ajuste conforme a necessidade para seu modelo
+
+  // Aplicar o material ao modelo
+  gltfLoader.load('data/ImageToStl.com_board.glb', function (gltf) {
+    gltf.scene.traverse(function (node) {
+      if (node.isMesh) {
+        node.material = material;
+      }
+    });
+    gltf.scene.position.set(0, 50, 0);
+    gltf.scene.scale.set(10, 10, 10); // Aumentar a escala para garantir visibilidade
+    scene.add(gltf.scene);
+    renderer.render(scene, camera);
+  }, undefined, function (error) {
+    console.error('Error loading GLTF:', error);
+  });
+
+
   const loader = new THREE.ObjectLoader(manager);
   loader.load("data/bench.json", function (bench) {
     // callback function
     // onLoad();
     bench.position.set(20, 0.5, -5);
     bench.scale.set(5, 5, 5);
-    
+
     scene.add(bench);
   });
 }
@@ -69,8 +106,9 @@ function init() {
     1,
     1000
   );
-  camera.position.z = 30;
+  camera.position.z = 40;
   camera.position.y = 10;
+  camera.position.x = 30;
   // camera.zoom = 3;
 
 
@@ -78,8 +116,8 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputEncoding = THREE.sRGBEncoding;
 
-renderer.shadowMap.enabled = true;  // Habilitar mapas de sombra
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // Tipo de sombra, PCFSoftShadowMap geralmente proporciona sombras mais suaves
+  renderer.shadowMap.enabled = true;  // Habilitar mapas de sombra
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // Tipo de sombra, PCFSoftShadowMap geralmente proporciona sombras mais suaves
   // from sky example
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.5;
@@ -89,13 +127,13 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // Tipo de sombra, PCFSoftSha
   //   // controls.enableZoom = false;
 
   controls = new FirstPersonControls(camera, renderer.domElement);
-  controls.movementSpeed = 10;
+  controls.movementSpeed = 8;
   controls.lookSpeed = 0.02;
   controls.lookVertical = true;
 
   window.addEventListener('resize', onWindowResize, false);
 
-  
+
 
 
 }
@@ -114,7 +152,7 @@ function lighting() {
   // Configurações adicionais de sombra para a luz direcional
   directionalLight.shadow.mapSize.width = 2048;  // Resolução da sombra
   directionalLight.shadow.mapSize.height = 2048;
-  directionalLight.shadow.camera.near = 0.5;
+  directionalLight.shadow.camera.near = 1;
   directionalLight.shadow.camera.far = 500;
   directionalLight.shadow.camera.left = -100;
   directionalLight.shadow.camera.right = 100;
@@ -144,10 +182,10 @@ function lighting() {
 
   // Atualizar a posição do sol com base nos parâmetros de elevação e azimute
 
-  
-  
+
+
   sun.setFromSphericalCoords(1, phi, theta);
-  
+
   sky.material.uniforms.sunPosition.value.copy(sun);
   directionalLight.position.copy(sun);  // Sincronizar a posição da luz direcional com a posição do sol
 }
@@ -171,7 +209,7 @@ function scenery() {
     side: THREE.DoubleSide,
     map: texture,
   });
-  
+
   const ground = new THREE.Mesh(geometry, material);
   ground.rotation.x = Math.PI / 2; // rotate 180 degrees
   ground.receiveShadow = true;
@@ -184,106 +222,145 @@ function scenery() {
   noiseTexture.wrapT = THREE.RepeatWrapping;
   noiseTexture.repeat.set(1, 4);
 
-// Carregar a textura
-const textureLoader = new THREE.TextureLoader();
-
-// Configurações da pedra
-const stoneRadiusTop = 1.8; // Raio superior do cilindro
-const stoneRadiusBottom = 2; // Raio inferior do cilindro para dar um efeito ligeiramente cônico
-const stoneHeight = 0.3; // Altura da pedra
-const stoneSegments = 32; // Número de segmentos para suavizar a pedra
-
-// Criar as pedras
-const stoneGeometry = new THREE.CylinderGeometry(stoneRadiusTop, stoneRadiusBottom, stoneHeight, stoneSegments);
-const stoneMaterial = new THREE.MeshStandardMaterial({
-  color: 0x6666666, // Cor cinza
-  map: noiseTexture
-});
-
-const numStones = 15; // Número de pedras no caminho
-const pathLength = 100; // Comprimento total do caminho
-const z = 0; // Posição z do caminho
-
-for (let i = 0; i < numStones; i++) {
-  const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
-  stone.position.x = (i / numStones) * pathLength - pathLength / 2 +  Math.random() * 1; // Distribuir ao longo do caminho
-  stone.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
-  stone.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
-  stone.position.z = z - Math.random() * 2  ;
-  
-  scene.add(stone);
-  
-  const stone2 = new THREE.Mesh(stoneGeometry, stoneMaterial);
-
-  stone2.position.x = (i / numStones) * pathLength - pathLength / 2 + Math.random() * 1; // Distribuir ao longo do caminho
-  stone2.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
-  stone2.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
-  stone2.position.z = z + 5 + Math.random() * 2;
-
-  scene.add(stone2);
-
-}
-
-// Renderizar a cena
-renderer.render(scene, camera);
-
-
-
-
   cloudLayer(250, 100);
   cloudLayer(150, 200);
 
   centralTree();
 
-  function centralTree(){
-  // Willow tree arvore com sombras
-  const willowTreeHeight = 70;
-  const willowTrunkGeo = new THREE.CylinderGeometry(2, 5, willowTreeHeight, 12);
-  const willowTrunkMat = new THREE.MeshStandardMaterial({
-    color: 0x4A2B0F,
-    map: noiseTexture, // Assuming you have a noise texture for bark details
-  });
-  const willowTrunk = new THREE.Mesh(willowTrunkGeo, willowTrunkMat);
-  willowTrunk.castShadow = true;  // Habilitar a projeção de sombras
-  willowTrunk.receiveShadow = true;  // Permitir que o objeto receba sombras
-  willowTrunk.position.set(0, 0 + willowTreeHeight / 2, 0);
-  scene.add(willowTrunk);
-  treeTrunkBoundingBox = new THREE.Box3().setFromObject(willowTrunk);
-
-
-  // Create willow foliage using an IcosahedronGeometry for a more organic look
-  const willowLeafGeo = new THREE.IcosahedronGeometry(15, 1);
-  const willowLeafMat = new THREE.MeshStandardMaterial({
-    color: 0x3DA35D,
-    side: THREE.DoubleSide,
-    map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
-  });
-  const willowLeaves = [];
-
-  // Position multiple leaf clusters to simulate the drooping effect
-  for (let i = 0; i < 5; i++) {
-    let leaf = new THREE.Mesh(willowLeafGeo, willowLeafMat);
-    leaf.position.set(
-      0 + Math.random() * 10 - 5, // Random position around the trunk
-      0 + willowTreeHeight - i * 5, // Gradually lower the leaves
-      0 + Math.random() * 10 - 5
-    );
-    leaf.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
-    leaf.rotation.z = Math.random() * Math.PI;
-    leaf.castShadow = true; 
-    leaf.receiveShadow = true;  
-    scene.add(leaf);
-    willowLeaves.push(leaf);
-  }
-  willowLeaves.forEach(leaf => {
-    let sphere = new THREE.Sphere();
-    let box = new THREE.Box3().setFromObject(leaf);
-    box.getBoundingSphere(sphere);
-    treeLeafBoundingSpheres.push(sphere);
-  });
-  }
-
   createForestEdge();
+
+  createStonePathZ(400, -75, 30, 200);
+  createStonePathX(373, -173, 7, 50);
+
+
+
+
+  function createStonePathZ(z, x, numStones, pathLength) {
+    // Configurações da pedra
+    const stoneRadiusTop = 1.8; // Raio superior do cilindro
+    const stoneRadiusBottom = 2; // Raio inferior do cilindro para dar um efeito ligeiramente cônico
+    const stoneHeight = 0.3; // Altura da pedra
+    const stoneSegments = 12; // Número de segmentos para suavizar a pedra
+
+    // Criar as pedras
+    const stoneGeometry = new THREE.CylinderGeometry(stoneRadiusTop, stoneRadiusBottom, stoneHeight, stoneSegments);
+    const stoneMaterial = new THREE.MeshStandardMaterial({
+      color: 0x6666666, // Cor cinza
+      map: noiseTexture
+    });
+
+    for (let i = 0; i < numStones; i++) {
+      const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
+      stone.position.x = x + (i / numStones) * pathLength - pathLength / 2 + Math.random() * 1; // Distribuir ao longo do caminho
+      stone.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
+      stone.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
+      stone.position.z = z - Math.random() * 2;
+
+      scene.add(stone);
+
+      const stone2 = new THREE.Mesh(stoneGeometry, stoneMaterial);
+
+      stone2.position.x = x + (i / numStones) * pathLength - pathLength / 2 + Math.random() * 1; // Distribuir ao longo do caminho
+      stone2.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
+      stone2.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
+      stone2.position.z = z + 5 + Math.random() * 2;
+
+      scene.add(stone2);
+
+    }
+
+    // Renderizar a cena
+    renderer.render(scene, camera);
+
+  }
+
+
+  function createStonePathX(z, x, numStones, pathLength) {
+    // Configurações da pedra
+    const stoneRadiusTop = 1.8; // Raio superior do cilindro
+    const stoneRadiusBottom = 2; // Raio inferior do cilindro para dar um efeito ligeiramente cônico
+    const stoneHeight = 0.3; // Altura da pedra
+    const stoneSegments = 12; // Número de segmentos para suavizar a pedra
+
+    // Criar as pedras
+    const stoneGeometry = new THREE.CylinderGeometry(stoneRadiusTop, stoneRadiusBottom, stoneHeight, stoneSegments);
+    const stoneMaterial = new THREE.MeshStandardMaterial({
+      color: 0x6666666, // Cor cinza
+      map: noiseTexture
+    });
+
+    for (let i = 0; i < numStones; i++) {
+      const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
+      stone.position.z = z + (i / numStones) * pathLength - pathLength / 2 + Math.random() * 1; // Distribuir ao longo do caminho
+      stone.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
+      stone.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
+      stone.position.x = x - Math.random() * 2;
+
+      scene.add(stone);
+
+      const stone2 = new THREE.Mesh(stoneGeometry, stoneMaterial);
+
+      stone2.position.z = z + (i / numStones) * pathLength - pathLength / 2 + Math.random() * 1; // Distribuir ao longo do caminho
+      stone2.position.y = stoneHeight / 2; // Posiciona a pedra para que sua base toque o chão
+      stone2.rotation.y = Math.random() * Math.PI; // Rotação aleatória para mais naturalidade
+      stone2.position.x = x + 5 + Math.random() * 2;
+
+      scene.add(stone2);
+
+    }
+
+    // Renderizar a cena
+    renderer.render(scene, camera);
+
+  }
+
+  function centralTree() {
+    // Willow tree arvore com sombras
+    const willowTreeHeight = 70;
+    const willowTrunkGeo = new THREE.CylinderGeometry(2, 5, willowTreeHeight, 12);
+    const willowTrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willowTrunk = new THREE.Mesh(willowTrunkGeo, willowTrunkMat);
+    willowTrunk.castShadow = true;  // Habilitar a projeção de sombras
+    willowTrunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willowTrunk.position.set(0, 0 + willowTreeHeight / 2, 0);
+    scene.add(willowTrunk);
+    treeTrunkBoundingBox = new THREE.Box3().setFromObject(willowTrunk);
+
+
+    // Create willow foliage using an IcosahedronGeometry for a more organic look
+    const willowLeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willowLeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willowLeaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf = new THREE.Mesh(willowLeafGeo, willowLeafMat);
+      leaf.position.set(
+        0 + Math.random() * 10 - 5, // Random position around the trunk
+        0 + willowTreeHeight - i * 5, // Gradually lower the leaves
+        0 + Math.random() * 10 - 5
+      );
+      leaf.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf.rotation.z = Math.random() * Math.PI;
+      leaf.castShadow = true;
+      leaf.receiveShadow = true;
+      scene.add(leaf);
+      willowLeaves.push(leaf);
+    }
+    willowLeaves.forEach(leaf => {
+      let sphere = new THREE.Sphere();
+      let box = new THREE.Box3().setFromObject(leaf);
+      box.getBoundingSphere(sphere);
+      treeLeafBoundingSpheres.push(sphere);
+    });
+  }
 
   function createForestEdge() {
     const treeTypes = [
@@ -512,7 +589,7 @@ renderer.render(scene, camera);
 
     for (let i = 0; i < foliageLevels; i++) {
       const radius = maxRadius * ((foliageLevels - i) / foliageLevels); // Decrease radius for upper layers
-      const foliageGeo = new THREE.ConeGeometry(radius, foliageHeight + 3, 16);
+      const foliageGeo = new THREE.ConeGeometry(radius, foliageHeight + 3, 6);
       const foliageMat = new THREE.MeshStandardMaterial({
         color: 0x228B22, // A rich green color
         map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
@@ -575,10 +652,10 @@ function animate() {
 
   const collisionResult = checkCollision(potentialPosition);
   if (!collisionResult.collided) {
-      controls.update(0.1);  // Update normally if no collision
+    controls.update(0.1);  // Update normally if no collision
   } else {
-      // Adjust the camera position to slide along the collision surface
-      slideAlongCollisionSurface(direction, moveDistance, collisionResult.normal);
+    // Adjust the camera position to slide along the collision surface
+    slideAlongCollisionSurface(direction, moveDistance, collisionResult.normal);
   }
 
   duck.rotation.y += 0.01;
@@ -594,8 +671,8 @@ function slideAlongCollisionSurface(direction, moveDistance, collisionNormal) {
 
   // Verifica se o deslizamento ainda aponta na direção original do movimento
   if (slideDirection.dot(direction) > 0) {
-      // Se sim, inverte a direção para garantir que não estamos indo em direção ao obstáculo
-      slideDirection.negate();
+    // Se sim, inverte a direção para garantir que não estamos indo em direção ao obstáculo
+    slideDirection.negate();
   }
 
   // Normaliza a direção de deslizamento para manter a velocidade constante e multiplica pela distância de movimento
@@ -616,13 +693,13 @@ function onWindowResize() {
 
 function checkCollision(newPosition) {
   if (treeTrunkBoundingBox.containsPoint(newPosition)) {
-      return { collided: true, normal: calculateNormalForBoundingBox(treeTrunkBoundingBox, newPosition) };
+    return { collided: true, normal: calculateNormalForBoundingBox(treeTrunkBoundingBox, newPosition) };
   }
   for (let sphere of treeLeafBoundingSpheres) {
-      if (newPosition.distanceTo(sphere.center) < sphere.radius) {
-          const normal = new THREE.Vector3().subVectors(newPosition, sphere.center).normalize();
-          return { collided: true, normal: normal };
-      }
+    if (newPosition.distanceTo(sphere.center) < sphere.radius) {
+      const normal = new THREE.Vector3().subVectors(newPosition, sphere.center).normalize();
+      return { collided: true, normal: normal };
+    }
   }
   return { collided: false };
 }
