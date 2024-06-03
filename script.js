@@ -74,9 +74,9 @@ function init() {
   );
   camera.position.z = 300;
   camera.position.y = 10;
-  camera.position.x = -10;
+  camera.position.x = 30;
   // camera.zoom = 3;
-  camera.lookAt(-100, 10, 300);
+  camera.lookAt(0, 10, 300);
 
 
   renderer = new THREE.WebGLRenderer();
@@ -94,7 +94,7 @@ function init() {
   //   // controls.enableZoom = false;
 
   controls = new FirstPersonControls(camera, renderer.domElement);
-  controls.movementSpeed = 8;
+  controls.movementSpeed = 5;
   controls.lookSpeed = 0.02;
   controls.lookVertical = true;
 
@@ -250,13 +250,13 @@ function scenery() {
  
     
       // Particle system for cherry blossoms
-      const particleCount = 1000;
+      const particleCount = 500;
       const particles = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
       for (let i = 0; i < particleCount * 3; i++) {
         positions[i] = Math.random() * 200 - 100; // Adjust for more centralized spawning
       }
-      particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      particles.setAttribute('position', new THREE.BufferAttribute(positions, 4));
     
       const particleMaterial = new THREE.PointsMaterial({
         color: 0xFFB7C5,
@@ -287,7 +287,6 @@ function scenery() {
     willowTrunk.castShadow = true;
     willowTrunk.receiveShadow = true;
     scene.add(willowTrunk);
-    treeTrunkBoundingBox = new THREE.Box3().setFromObject(willowTrunk);
 
 
     // Create willow foliage using an IcosahedronGeometry for a more organic look
@@ -332,7 +331,6 @@ function scenery() {
     willow2Trunk.castShadow = true;
     willow2Trunk.receiveShadow = true;
     scene.add(willow2Trunk);
-    treeTrunkBoundingBox = new THREE.Box3().setFromObject(willow2Trunk);
 
 
     // Create willow2 foliage using an IcosahedronGeometry for a more organic look
@@ -749,7 +747,7 @@ function scenery() {
   function createWillowTree(x, y, z) {
 
     const willowTreeHeight = 50 + Math.random() * 100;
-    const willowTrunkGeo = new THREE.CylinderGeometry(2, 8 + Math.random() * 10, willowTreeHeight, 12);
+    const willowTrunkGeo = new THREE.CylinderGeometry(2, 8 + Math.random() * 2, willowTreeHeight, 12);
     const willowTrunkMat = new THREE.MeshStandardMaterial({
       color: 0x4A2B0F,
       map: noiseTexture, // Assuming you have a noise texture for bark details
@@ -851,8 +849,8 @@ function scenery() {
 
     const pineTreeHeight = 100 + Math.random() * 150; // Total height of the tree
     const trunkHeight = pineTreeHeight * 0.25; // The trunk is 1/4 the height of the tree
-    const trunkRadiusTop = 2; // Top radius of the trunk
-    const trunkRadiusBottom = 5 + Math.random() * 5; // Bottom radius of the trunk
+    const trunkRadiusTop = 2 + Math.random() * 2; // Top radius of the trunk
+    const trunkRadiusBottom = 5 + Math.random() * 3; // Bottom radius of the trunk
     const trunkGeo = new THREE.CylinderGeometry(trunkRadiusTop, trunkRadiusBottom, trunkHeight, 12);
     const trunkMat = new THREE.MeshStandardMaterial({
       color: 0x8B4513, // A dark brown color for the trunk
