@@ -50,6 +50,71 @@ function load() {
     scene.add(sceneObject);
   });
 
+  const gltfLoader2 = new THREE.GLTFLoader(manager);
+  const gltfURL2 = 'minecraft_bee/scene.gltf'; // Atualize este caminho
+  gltfLoader2.load(gltfURL2, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-175, 15, 320);
+    sceneObject.scale.set(50, 50, 50);
+    sceneObject.rotation.y = Math.PI / 2 + 1;
+    scene.add(sceneObject);
+  });
+
+  const gltfLoader3 = new THREE.GLTFLoader(manager);
+  const gltfURL3 = 'minecraft_bee/scene.gltf'; // Atualize este caminho
+  gltfLoader3.load(gltfURL3, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-185, 10, 302);
+    sceneObject.scale.set(50, 50, 50);
+    sceneObject.rotation.y = Math.PI / 2 - 1;
+    scene.add(sceneObject);
+  });
+
+  const gltfLoader4 = new THREE.GLTFLoader(manager);
+  const gltfURL4 = 'minecraft_grass_block/scene.gltf'; // Atualize este caminho
+  gltfLoader4.load(gltfURL4, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-185, 1, 315);
+    sceneObject.scale.set(3, 3, 3);
+    scene.add(sceneObject);
+  });
+
+  const gltfLoader5 = new THREE.GLTFLoader(manager);
+  const gltfURL5 = 'minecraft_grass_block/scene.gltf'; // Atualize este caminho
+  gltfLoader5.load(gltfURL5, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-185, 1, 309);
+    sceneObject.scale.set(3, 3, 3);
+    scene.add(sceneObject);
+  });
+
+  const gltfLoader6 = new THREE.GLTFLoader(manager);
+  const gltfURL6 = 'minecraft_grass_block/scene.gltf'; // Atualize este caminho
+  gltfLoader6.load(gltfURL6, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-179, 1, 315);
+    sceneObject.scale.set(3, 3, 3);
+    scene.add(sceneObject);
+  });
+
+
+  const gltfLoader7 = new THREE.GLTFLoader(manager);
+  const gltfURL7 = 'minecraft_grass_block/scene.gltf'; // Atualize este caminho
+  gltfLoader7.load(gltfURL7, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-185, 7, 315);
+    sceneObject.scale.set(3, 3, 3);
+    scene.add(sceneObject);
+  });
+
+
+
 
 
   const loader = new THREE.ObjectLoader(manager);
@@ -385,7 +450,7 @@ function scenery() {
     const willow3Trunk = new THREE.Mesh(willow3TrunkGeo, willow3TrunkMat);
     willow3Trunk.castShadow = true;  // Habilitar a projeção de sombras
     willow3Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
-    willow3Trunk.position.set(-140, 0 + willow3TreeHeight / 2, 275);
+    willow3Trunk.position.set(-120, 0 + willow3TreeHeight / 2, 270);
     willow3Trunk.castShadow = true;
     willow3Trunk.receiveShadow = true;
     scene.add(willow3Trunk);
@@ -404,9 +469,9 @@ function scenery() {
     for (let i = 0; i < 5; i++) {
       let leaf3 = new THREE.Mesh(willow3LeafGeo, willow3LeafMat);
       leaf3.position.set(
-        -140 + Math.random() * 10 - 5, // Random position around the trunk
+        -120 + Math.random() * 10 - 5, // Random position around the trunk
         0 + willow2TreeHeight - 15 - i * 2, // Gradually lower the leaves
-        275 + Math.random() * 10 - 5
+        270 + Math.random() * 10 - 5
       );
       leaf3.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
       leaf3.rotation.z = Math.random() * Math.PI;
@@ -426,7 +491,7 @@ function scenery() {
     const willow4Trunk = new THREE.Mesh(willow4TrunkGeo, willow4TrunkMat);
     willow4Trunk.castShadow = true;  // Habilitar a projeção de sombras
     willow4Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
-    willow4Trunk.position.set(-135, 0 + willow4TreeHeight / 2, 245);
+    willow4Trunk.position.set(-145, 0 + willow4TreeHeight / 2, 245);
     willow4Trunk.castShadow = true;
     willow4Trunk.receiveShadow = true;
     scene.add(willow4Trunk);
@@ -445,7 +510,7 @@ function scenery() {
     for (let i = 0; i < 5; i++) {
       let leaf4 = new THREE.Mesh(willow4LeafGeo, willow4LeafMat);
       leaf4.position.set(
-        -135 + Math.random() * 10 - 5, // Random position around the trunk
+        -145 + Math.random() * 10 - 5, // Random position around the trunk
         0 + willow2TreeHeight - 15 - i * 2, // Gradually lower the leaves
         245 + Math.random() * 10 - 5
       );
@@ -456,6 +521,130 @@ function scenery() {
       scene.add(leaf4);
       willow4Leaves.push(leaf4);
     }
+
+    // Willow tree arvore com sombras
+    const willow5TreeHeight = 50;
+    const willow5TrunkGeo = new THREE.CylinderGeometry(2, 5, willow5TreeHeight, 12);
+    const willow5TrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willow5Trunk = new THREE.Mesh(willow5TrunkGeo, willow5TrunkMat);
+    willow5Trunk.castShadow = true;  // Habilitar a projeção de sombras
+    willow5Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willow5Trunk.position.set(-220, 0 + willow5TreeHeight / 2, 300);
+    willow5Trunk.castShadow = true;
+    willow5Trunk.receiveShadow = true;
+    scene.add(willow5Trunk);
+
+
+    // Create willow2 foliage using an IcosahedronGeometry for a more organic look
+    const willow5LeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willow5LeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willow5Leaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf5 = new THREE.Mesh(willow5LeafGeo, willow5LeafMat);
+      leaf5.position.set(
+        -220 + Math.random() * 10 - 5, // Random position around the trunk
+        2 + willow2TreeHeight - i * 5, // Gradually lower the leaves
+        300 + Math.random() * 10 - 5
+      );
+      leaf5.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf5.rotation.z = Math.random() * Math.PI;
+      leaf5.castShadow = true;
+      leaf5.receiveShadow = true;
+      scene.add(leaf5);
+      willow4Leaves.push(leaf5);
+    }
+
+    // Willow tree arvore com sombras
+    const willow6TreeHeight = 70;
+    const willow6TrunkGeo = new THREE.CylinderGeometry(2, 5, willow6TreeHeight, 12);
+    const willow6TrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willow6Trunk = new THREE.Mesh(willow6TrunkGeo, willow6TrunkMat);
+    willow6Trunk.castShadow = true;  // Habilitar a projeção de sombras
+    willow6Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willow6Trunk.position.set(-180, 0 + willow6TreeHeight / 2, 340);
+    willow6Trunk.castShadow = true;
+    willow6Trunk.receiveShadow = true;
+    scene.add(willow6Trunk);
+
+
+    // Create willow2 foliage using an IcosahedronGeometry for a more organic look
+    const willow6LeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willow6LeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willow6Leaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf6 = new THREE.Mesh(willow6LeafGeo, willow6LeafMat);
+      leaf6.position.set(
+        -180 + Math.random() * 10 - 5, // Random position around the trunk
+        0 + willow6TreeHeight - i * 5, // Gradually lower the leaves
+        340 + Math.random() * 10 - 5
+      );
+      leaf6.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf6.rotation.z = Math.random() * Math.PI;
+      leaf6.castShadow = true;
+      leaf6.receiveShadow = true;
+      scene.add(leaf6);
+      willow6Leaves.push(leaf6);
+    }
+
+
+        // Willow tree arvore com sombras
+        const willow7TreeHeight = 80;
+        const willow7TrunkGeo = new THREE.CylinderGeometry(2, 6, willow7TreeHeight, 12);
+        const willow7TrunkMat = new THREE.MeshStandardMaterial({
+          color: 0x4A2B0F,
+          map: noiseTexture, // Assuming you have a noise texture for bark details
+        });
+        const willow7Trunk = new THREE.Mesh(willow7TrunkGeo, willow7TrunkMat);
+        willow7Trunk.castShadow = true;  // Habilitar a projeção de sombras
+        willow7Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+        willow7Trunk.position.set(-250, 0 + willow7TreeHeight / 2, 370);
+        willow7Trunk.castShadow = true;
+        willow7Trunk.receiveShadow = true;
+        scene.add(willow7Trunk);
+    
+    
+        // Create willow2 foliage using an IcosahedronGeometry for a more organic look
+        const willow7LeafGeo = new THREE.IcosahedronGeometry(30, 1);
+        const willow7LeafMat = new THREE.MeshStandardMaterial({
+          color: 0x3DA35D,
+          side: THREE.DoubleSide,
+          map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+        });
+        const willow7Leaves = [];
+    
+        // Position multiple leaf clusters to simulate the drooping effect
+        for (let i = 0; i < 5; i++) {
+          let leaf7 = new THREE.Mesh(willow7LeafGeo, willow7LeafMat);
+          leaf7.position.set(
+            -250 + Math.random() * 10 - 5, // Random position around the trunk
+            0 + willow7TreeHeight - i * 5, // Gradually lower the leaves
+            370 + Math.random() * 10 - 5
+          );
+          leaf7.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+          leaf7.rotation.z = Math.random() * Math.PI;
+          leaf7.castShadow = true;
+          leaf7.receiveShadow = true;
+          scene.add(leaf7);
+          willow7Leaves.push(leaf7);
+        }
 
 
   }
