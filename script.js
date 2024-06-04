@@ -40,6 +40,16 @@ function load() {
     scene.add(duck);
   });
 
+  const gltfLoader1 = new THREE.GLTFLoader(manager);
+  const gltfURL1 = 'tables_and_chairs/scene.gltf'; // Atualize este caminho
+  gltfLoader1.load(gltfURL1, function (glb) {
+    console.log(glb);
+    const sceneObject = glb.scene;
+    sceneObject.position.set(-190, -8, 280);
+    sceneObject.scale.set(8, 8, 8);
+    scene.add(sceneObject);
+  });
+
 
 
   const loader = new THREE.ObjectLoader(manager);
@@ -51,6 +61,8 @@ function load() {
 
     scene.add(bench);
   });
+
+
 }
 
 function onLoad() {
@@ -94,7 +106,7 @@ function init() {
   //   // controls.enableZoom = false;
 
   controls = new FirstPersonControls(camera, renderer.domElement);
-  controls.movementSpeed = 5;
+  controls.movementSpeed = 20;
   controls.lookSpeed = 0.02;
   controls.lookVertical = true;
 
@@ -189,8 +201,13 @@ function scenery() {
   noiseTexture.wrapT = THREE.RepeatWrapping;
   noiseTexture.repeat.set(1, 4);
 
+  const clouds = [];
+
   cloudLayer(250, 100);
   cloudLayer(150, 200);
+
+  animateClouds();
+
 
   centralTree();
 
@@ -223,32 +240,32 @@ function scenery() {
       trunk.castShadow = true;
       trunk.receiveShadow = true;
       scene.add(trunk);
-    
-       // Create cherry blossoms using SphereGeometry with small particles
-       const blossomCount = 80 + treeHeight / 4; // Total number of blossoms
-       const blossomGeo = new THREE.SphereGeometry(10, 8, 8); // Small spheres for blossoms
-       const blossomMat = new THREE.MeshStandardMaterial({
-         color: 0xFFB7C5, // A soft pink color for the blossoms
-         map: noiseTexture,
- 
-       });
- 
-       for (let i = 0; i < blossomCount; i++) {
-         const blossom = new THREE.Mesh(blossomGeo, blossomMat);
-         const angle = Math.random() * Math.PI * 2; // Random angle for horizontal spread
-         const height = y + trunkHeight + (Math.random() * treeHeight * 0.2); // Random height above the trunk
-         const distance = 10; // Random distance from trunk center
-         blossom.position.set(
-           x + Math.cos(angle) * distance,
-           height,
-           z + Math.sin(angle) * distance
-         );
-         blossom.castShadow = true;
-         blossom.receiveShadow = true;
-         scene.add(blossom);
-       }
- 
-    
+
+      // Create cherry blossoms using SphereGeometry with small particles
+      const blossomCount = 80 + treeHeight / 4; // Total number of blossoms
+      const blossomGeo = new THREE.SphereGeometry(10, 8, 8); // Small spheres for blossoms
+      const blossomMat = new THREE.MeshStandardMaterial({
+        color: 0xFFB7C5, // A soft pink color for the blossoms
+        map: noiseTexture,
+
+      });
+
+      for (let i = 0; i < blossomCount; i++) {
+        const blossom = new THREE.Mesh(blossomGeo, blossomMat);
+        const angle = Math.random() * Math.PI * 2; // Random angle for horizontal spread
+        const height = y + trunkHeight + (Math.random() * treeHeight * 0.2); // Random height above the trunk
+        const distance = 10; // Random distance from trunk center
+        blossom.position.set(
+          x + Math.cos(angle) * distance,
+          height,
+          z + Math.sin(angle) * distance
+        );
+        blossom.castShadow = true;
+        blossom.receiveShadow = true;
+        scene.add(blossom);
+      }
+
+
       // Particle system for cherry blossoms
       const particleCount = 500;
       const particles = new THREE.BufferGeometry();
@@ -257,18 +274,18 @@ function scenery() {
         positions[i] = Math.random() * 200 - 100; // Adjust for more centralized spawning
       }
       particles.setAttribute('position', new THREE.BufferAttribute(positions, 4));
-    
+
       const particleMaterial = new THREE.PointsMaterial({
         color: 0xFFB7C5,
         size: 0.5,
         transparent: true,
         opacity: 0.6  // Increased opacity for visibility
       });
-    
+
       const particleSystem = new THREE.Points(particles, particleMaterial);
       particleSystem.position.set(x, y, z); // Adjust position to emit from the top of the trunk
       scene.add(particleSystem);
-    
+
       return particleSystem; // Return the particle system
     }
 
@@ -357,6 +374,89 @@ function scenery() {
       scene.add(leaf2);
       willow2Leaves.push(leaf2);
     }
+
+    // Willow tree arvore com sombras
+    const willow3TreeHeight = 30;
+    const willow3TrunkGeo = new THREE.CylinderGeometry(2, 3, willow3TreeHeight, 8);
+    const willow3TrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willow3Trunk = new THREE.Mesh(willow3TrunkGeo, willow3TrunkMat);
+    willow3Trunk.castShadow = true;  // Habilitar a projeção de sombras
+    willow3Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willow3Trunk.position.set(-140, 0 + willow3TreeHeight / 2, 275);
+    willow3Trunk.castShadow = true;
+    willow3Trunk.receiveShadow = true;
+    scene.add(willow3Trunk);
+
+
+    // Create willow2 foliage using an IcosahedronGeometry for a more organic look
+    const willow3LeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willow3LeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willow3Leaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf3 = new THREE.Mesh(willow3LeafGeo, willow3LeafMat);
+      leaf3.position.set(
+        -140 + Math.random() * 10 - 5, // Random position around the trunk
+        0 + willow2TreeHeight - 15 - i * 2, // Gradually lower the leaves
+        275 + Math.random() * 10 - 5
+      );
+      leaf3.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf3.rotation.z = Math.random() * Math.PI;
+      leaf3.castShadow = true;
+      leaf3.receiveShadow = true;
+      scene.add(leaf3);
+      willow3Leaves.push(leaf3);
+    }
+
+    // Willow tree arvore com sombras
+    const willow4TreeHeight = 30;
+    const willow4TrunkGeo = new THREE.CylinderGeometry(2, 3, willow4TreeHeight, 8);
+    const willow4TrunkMat = new THREE.MeshStandardMaterial({
+      color: 0x4A2B0F,
+      map: noiseTexture, // Assuming you have a noise texture for bark details
+    });
+    const willow4Trunk = new THREE.Mesh(willow4TrunkGeo, willow4TrunkMat);
+    willow4Trunk.castShadow = true;  // Habilitar a projeção de sombras
+    willow4Trunk.receiveShadow = true;  // Permitir que o objeto receba sombras
+    willow4Trunk.position.set(-135, 0 + willow4TreeHeight / 2, 245);
+    willow4Trunk.castShadow = true;
+    willow4Trunk.receiveShadow = true;
+    scene.add(willow4Trunk);
+
+
+    // Create willow2 foliage using an IcosahedronGeometry for a more organic look
+    const willow4LeafGeo = new THREE.IcosahedronGeometry(15, 1);
+    const willow4LeafMat = new THREE.MeshStandardMaterial({
+      color: 0x3DA35D,
+      side: THREE.DoubleSide,
+      map: noiseTexture, // You can reuse the same noise texture or use a green leafy texture
+    });
+    const willow4Leaves = [];
+
+    // Position multiple leaf clusters to simulate the drooping effect
+    for (let i = 0; i < 5; i++) {
+      let leaf4 = new THREE.Mesh(willow4LeafGeo, willow4LeafMat);
+      leaf4.position.set(
+        -135 + Math.random() * 10 - 5, // Random position around the trunk
+        0 + willow2TreeHeight - 15 - i * 2, // Gradually lower the leaves
+        245 + Math.random() * 10 - 5
+      );
+      leaf4.rotation.x = Math.random() * Math.PI; // Random rotation for natural look
+      leaf4.rotation.z = Math.random() * Math.PI;
+      leaf4.castShadow = true;
+      leaf4.receiveShadow = true;
+      scene.add(leaf4);
+      willow4Leaves.push(leaf4);
+    }
+
 
   }
 
@@ -640,6 +740,7 @@ function scenery() {
     });
   }
 
+
   function createForestEdge() {
     const treeTypes = [
       createNormalTree,
@@ -740,7 +841,6 @@ function scenery() {
     leaf3.rotation.z = Math.random() * Math.PI;
     scene.add(leaf3);
   }
-
 
   // Willow tree
 
@@ -912,8 +1012,23 @@ function scenery() {
       const z = Math.random() * 1700 - 1000;
       cloud.position.set(x, y, z);
       scene.add(cloud);
+      clouds.push(cloud); // Adiciona a nuvem ao array
     }
   }
+
+  function animateClouds() {
+    requestAnimationFrame(animateClouds);
+
+    clouds.forEach(cloud => {
+      cloud.position.x += 0.1; // Move a nuvem na direção x
+      // Adicione mais movimento se desejar, por exemplo:
+      // cloud.position.y += 0.01;
+      // cloud.position.z += 0.01;
+    });
+
+    renderer.render(scene, camera); // Renderiza a cena novamente
+  }
+
 
 }
 
@@ -991,14 +1106,14 @@ function calculateNormalForBoundingBox(box, point) {
   return new THREE.Vector3().subVectors(point, closestPoint).normalize();
 }
 
-  // Animation function to update particles
-  function updateParticles(particleSystem) {
-    const positions = particleSystem.geometry.attributes.position.array;
-    for (let i = 0; i < positions.length; i += 3) {
-      positions[i + 1] -= 0.1; // Move each particle down
-      if (positions[i + 1] < 0) {
-        positions[i + 1] += 50; // Reset particles to top when they reach bottom
-      }
+// Animation function to update particles
+function updateParticles(particleSystem) {
+  const positions = particleSystem.geometry.attributes.position.array;
+  for (let i = 0; i < positions.length; i += 3) {
+    positions[i + 1] -= 0.1; // Move each particle down
+    if (positions[i + 1] < 0) {
+      positions[i + 1] += 50; // Reset particles to top when they reach bottom
     }
-    particleSystem.geometry.attributes.position.needsUpdate = true;
   }
+  particleSystem.geometry.attributes.position.needsUpdate = true;
+}
