@@ -171,7 +171,7 @@ function init() {
   //   // controls.enableZoom = false;
 
   controls = new FirstPersonControls(camera, renderer.domElement);
-  controls.movementSpeed = 20;
+  controls.movementSpeed = 5;
   controls.lookSpeed = 0.02;
   controls.lookVertical = true;
 

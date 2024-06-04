@@ -1,0 +1,11 @@
+Model Information:
+* title:	Minecraft Bee
+* source:	https://sketchfab.com/3d-models/minecraft-bee-a0784550713747eb9cf8baeb7eac7651
+* author:	Wren (https://sketchfab.com/FrostsDream)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Minecraft Bee" (https://sketchfab.com/3d-models/minecraft-bee-a0784550713747eb9cf8baeb7eac7651) by Wren (https://sketchfab.com/FrostsDream) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
